@@ -1,0 +1,99 @@
+# NorthStar Pay — Lakehouse Pipeline Bundle
+# Separate Datagen and Lakehouse pipelines
+
+# DATAGEN RESOURCES (SEPARATE BUNDLE)
+bundle:
+  name: northstar_pay_datagen
+  # Removed 'description' per schema validation
+
+resources:
+  jobs:
+    datagen_job:
+      name: "[${bundle.target}] northstar_pay_datagen"
+      tasks:
+        - task_key: generate_dimensions
+          notebook_task:
+            notebook_path: ./datagen/01_config_and_dimensions.ipynb
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              volume: ${var.volume}
+              num_customers: ${var.num_customers}
+              num_merchants: ${var.num_merchants}
+              random_seed: ${var.random_seed}
+        - task_key: generate_transactions
+          depends_on:
+            - task_key: generate_dimensions
+          notebook_task:
+            notebook_path: ./datagen/02_generate_transactions.ipynb
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              volume: ${var.volume}
+              num_transactions: ${var.num_transactions}
+              months_of_history: ${var.months_of_history}
+              fraud_rate: ${var.fraud_rate}
+              random_seed: ${var.random_seed}
+        - task_key: generate_device_logs
+          depends_on:
+            - task_key: generate_dimensions
+          notebook_task:
+            notebook_path: ./datagen/03_generate_device_session_logs.ipynb
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              volume: ${var.volume}
+              num_events: ${var.num_devices_events}
+              months_of_history: ${var.months_of_history}
+              random_seed: ${var.random_seed}
+
+targets:
+  dev:
+    mode: development
+    workspace:
+      host: https://adb-7405610008164608.8.azuredatabricks.net
+    variables:
+      catalog: northstar_dev
+      schema: raw
+      volume: landing
+      num_customers: "50000"
+      num_merchants: "9000"
+      num_transactions: "820000"
+      num_devices_events: "260000"
+      random_seed: "42"
+    run_as:
+      user_name: anir.cloud01@gmail.com
+
+  staging:
+    mode: production
+    workspace:
+      host: https://adb-7405610008164608.8.azuredatabricks.net
+    variables:
+      catalog: northstar_staging
+      schema: raw
+      volume: landing
+      num_customers: "50000"
+      num_merchants: "9000"
+      num_transactions: "820000"
+      num_devices_events: "260000"
+      random_seed: "42"
+    permissions:
+      - level: CAN_VIEW
+        group_name: data-team
+
+  prod:
+    mode: production
+    workspace:
+      host: https://adb-7405610008164608.8.azuredatabricks.net
+    variables:
+      catalog: northstar_prod
+      schema: raw
+      volume: landing
+      num_customers: "90000"  # Increased for production
+      num_merchants: "10000"
+      num_transactions: "900000"
+      num_devices_events: "260000"
+      random_seed: "42"
+    permissions:
+      - level: CAN_MANAGE
+        group_name: data-platform-admins
