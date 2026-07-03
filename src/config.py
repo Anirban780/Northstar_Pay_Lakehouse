@@ -22,21 +22,21 @@ ENV_CONFIG = {
         "schema_bronze": "bronze",
         "schema_silver": "silver",
         "schema_gold": "gold",
-        "volume_root": "/Volumes/northstar_dev/landing/raw",
+        "volume_root": "/Volumes/northstar_dev/raw/landing",
     },
     "staging": {
         "catalog": "northstar_staging",
         "schema_bronze": "bronze",
         "schema_silver": "silver",
         "schema_gold": "gold",
-        "volume_root": "/Volumes/northstar_staging/landing/raw",
+        "volume_root": "/Volumes/northstar_staging/raw/landing",
     },
     "prod": {
         "catalog": "northstar_prod",
         "schema_bronze": "bronze",
         "schema_silver": "silver",
         "schema_gold": "gold",
-        "volume_root": "/Volumes/northstar_prod/landing/raw",
+        "volume_root": "/Volumes/northstar_prod/raw/landing",
     },
 }
 

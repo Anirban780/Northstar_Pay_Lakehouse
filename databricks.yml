@@ -1,13 +1,37 @@
 # NorthStar Pay — Lakehouse Pipeline Bundle
 # Separate Datagen and Lakehouse pipelines
 
-# DATAGEN RESOURCES (SEPARATE BUNDLE)
 bundle:
-  name: northstar_pay_datagen
-  # Removed 'description' per schema validation
+  name: northstar_pay_pipeline
 
+
+# 1. Root-level variable declarations (Required for schema validation)
+variables:
+  catalog:
+    description: "Target Unity Catalog"
+  schema:
+    description: "Target Schema"
+  volume:
+    description: "Target Volume for raw landing files"
+  num_customers:
+    description: "Number of customers to generate"
+  num_merchants:
+    description: "Number of merchants to generate"
+  num_transactions:
+    description: "Number of transactions to generate"
+  num_devices_events:
+    description: "Number of device events to generate"
+  random_seed:
+    description: "Random seed for reproducibility"
+  months_of_history:
+    default: "3"
+  fraud_rate:
+    default: "0.02"
+
+# 2. Separate Orchestrated Workflows
 resources:
   jobs:
+    # JOB 1: Handles Mock Data Generation Only
     datagen_job:
       name: "[${bundle.target}] northstar_pay_datagen"
       tasks:
@@ -47,6 +71,18 @@ resources:
               months_of_history: ${var.months_of_history}
               random_seed: ${var.random_seed}
 
+    # JOB 2: Handles Lakehouse Ingestion Separately
+    bronze_job:
+      name: "[${bundle.target}] northstar_pay_bronze"
+      tasks:
+        - task_key: run_bronze_pipeline
+          notebook_task:
+            notebook_path: ./resources/notebooks/bronze_pipeline.py
+            base_parameters:
+              catalog: ${var.catalog}
+              env: ${bundle.target}
+
+# 3. Environment Targets
 targets:
   dev:
     mode: development
@@ -89,7 +125,7 @@ targets:
       catalog: northstar_prod
       schema: raw
       volume: landing
-      num_customers: "90000"  # Increased for production
+      num_customers: "90000"
       num_merchants: "10000"
       num_transactions: "900000"
       num_devices_events: "260000"

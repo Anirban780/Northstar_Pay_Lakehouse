@@ -20,6 +20,13 @@ dev = [
     "ipykernel",
 ]
 
+local-test = [
+    "pytest",
+    "ruff",
+    "pyspark>=3.5.0",  # Standard, unhijacked PySpark
+    "ipykernel",
+]
+
 [project.scripts]
 main = "northstar_pay_lakehouse.main:main"
 
@@ -29,9 +36,13 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
+sources = {"src" = "src"}   # maps the folder → package name explicitly
 
 [tool.ruff]
 line-length = 120
 
 [tool.ruff.lint]
 global-declarations = ["spark", "dbutils"]
+
+[tool.pytest.ini_options]
+pythonpath = [".", "src"]
